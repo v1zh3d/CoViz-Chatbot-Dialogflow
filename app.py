@@ -89,33 +89,25 @@ def getCountryName(req, db):
     user_says = result.get("queryText")
     country = result.get("parameters").get("country")
     country = country.lower()
-    country = country.capitalize()
-    if country == "USA" or country == "usa" or country == "United States Of America":
-        country = "United States of America"
-    elif country == "UK" or country == "uk":
-        country = "United Kingdom"
-    elif country == "UAE" or country ==  "uae":
-        country = "United Arab Emirates"
+    country = country.title()
     try:
-        url = "https://api.covid19api.com/summary"
+        url = "https://corona.lmao.ninja/v2/countries/" + country
         res = requests.get(url)
         jsonRes = res.json()
-        countryWiseCases = jsonRes["Countries"]
-        print(len(countryWiseCases))
-        for i in range(len(countryWiseCases)):
-            if countryWiseCases[i]["Country"] == country:
-                confirmed = str(countryWiseCases[i]["TotalConfirmed"])
-                recovered = str(countryWiseCases[i]["TotalRecovered"])
-                deaths = str(countryWiseCases[i]["TotalDeaths"])
-                fulfillmentText = country + " stats of COVID-19 are: \nConfirmed Cases: " + confirmed + "\nRecovered Cases: " + recovered + "\nDeaths: " + deaths
-                bot_says = fulfillmentText
-                if db.conversations.find({"sessionID": sessionID}).count() > 0:
-                    db.conversations.update_one({"sessionID": sessionID}, {"$push": {"events": {"$each": [user_says, bot_says]}}})
-                else:
-                    db.conversations.insert_one({"sessionID": sessionID, "events": [user_says, bot_says]})
-                return {
-                    "fulfillmentText": fulfillmentText
-                }
+        countryWiseCases = jsonRes
+        if countryWiseCases["country"]:
+            confirmed = str(countryWiseCases["cases"])
+            recovered = str(countryWiseCases["recovered"])
+            deaths = str(countryWiseCases["deaths"])
+            fulfillmentText = country + " stats of COVID-19 are: \nConfirmed Cases: " + confirmed + "\nRecovered Cases: " + recovered + "\nDeaths: " + deaths
+            bot_says = fulfillmentText
+            if db.conversations.find({"sessionID": sessionID}).count() > 0:
+                db.conversations.update_one({"sessionID": sessionID}, {"$push": {"events": {"$each": [user_says, bot_says]}}})
+            else:
+                db.conversations.insert_one({"sessionID": sessionID, "events": [user_says, bot_says]})
+            return {
+                "fulfillmentText": fulfillmentText
+            }
         else:
             fulfillmentText = "Sorry we could not find any country named " + country + ". It might be a misspelling or we don't have record of the country."
             bot_says = fulfillmentText
@@ -143,7 +135,11 @@ def getStateName(req, db):
     user_says = result.get("queryText")
     state = result.get("parameters").get("state")
     state = state.lower()
-    state = state.capitalize()
+    state = state.title()
+    if "&" in state:
+        state = state.replace("&", "and")
+    if state == "Tamilnadu":
+        state = "Tamil Nadu"
     try:
         url = "https://api.covid19india.org/data.json"
         res = requests.get(url)
@@ -195,7 +191,7 @@ def getUserDetails(req, db):
     email = result.get("parameters").get("email")
     mobile = result.get("parameters").get("mobile")
     pincode = result.get("parameters").get("pincode")
-    regex_email = "^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$"
+    regex_email = "^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"
     regex_mobile = "[0-9]{10}"
     regex_pincode = "[0-9]{6}"
     if re.search(regex_email, email) is None:
