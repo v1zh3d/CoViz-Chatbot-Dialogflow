@@ -140,6 +140,8 @@ def getStateName(req, db):
         state = state.replace("&", "and")
     if state == "Tamilnadu":
         state = "Tamil Nadu"
+    elif state == "Delhi ":
+        state = "Delhi"
     try:
         url = "https://api.covid19india.org/data.json"
         res = requests.get(url)
@@ -191,7 +193,7 @@ def getUserDetails(req, db):
     email = result.get("parameters").get("email")
     mobile = result.get("parameters").get("mobile")
     pincode = result.get("parameters").get("pincode")
-    regex_email = "^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"
+    regex_email = "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     regex_mobile = "[0-9]{10}"
     regex_pincode = "[0-9]{6}"
     if re.search(regex_email, email) is None:
